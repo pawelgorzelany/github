@@ -19,6 +19,7 @@ module GitHub.Endpoints.Repos (
     -- ** Create
     createRepoR,
     createOrganizationRepoR,
+    createRepoFromTemplateR,
     forkExistingRepoR,
 
     -- ** Edit
@@ -84,16 +85,29 @@ createRepoR nrepo =
 
 -- | Fork an existing repository.
 -- See <https://developer.github.com/v3/repos/forks/#create-a-fork>
--- TODO: The third paramater (an optional Organisation) is not used yet.
-forkExistingRepoR :: Name Owner -> Name Repo -> Maybe (Name Owner) -> Request 'RW Repo
-forkExistingRepoR owner repo _morg =
-    command Post ["repos", toPathPart owner, toPathPart repo, "forks" ] mempty
+forkExistingRepoR
+    :: Name Owner
+    -> Name Repo
+    -> Maybe (Name Organization)
+    -> Request 'RW Repo
+forkExistingRepoR owner repo morg =
+    command Post ["repos", toPathPart owner, toPathPart repo, "forks" ] org
+  where
+    org = case morg of
+            Nothing -> mempty
+            Just orgName -> encode $ object ["organization" .= orgName]
 
 -- | Create a new repository for an organization.
 -- See <https://developer.github.com/v3/repos/#create>
 createOrganizationRepoR :: Name Organization -> NewRepo -> Request 'RW Repo
 createOrganizationRepoR org nrepo =
     command Post ["orgs", toPathPart org, "repos"] (encode nrepo)
+
+-- | Create a new repository from a tamplate (Preview)
+-- See <https://developer.github.com/v3/repos/#create-a-repository-using-a-template>
+createRepoFromTemplateR :: Name Owner -> Name Repo -> FromTemplateRepo -> Request 'RW Repo
+createRepoFromTemplateR owner template trepo =
+    command Post ["repos", toPathPart owner, toPathPart template, "generate"] (encode trepo)
 
 -- | Edit an existing repository.
 -- See <https://developer.github.com/v3/repos/#edit>

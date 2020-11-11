@@ -98,6 +98,19 @@ instance Binary NewRepo
 newRepo :: Name Repo -> NewRepo
 newRepo name = NewRepo name Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
+data FromTemplateRepo = FromTemplateRepo
+    { fromTemplateRepoName        :: !(Name Repo)
+    , fromTemplateRepoOwner       :: !(Maybe Text)
+    , fromTemplateRepoDescription :: !(Maybe Text)
+    , fromTemplateRepoPrivate     :: !(Maybe Bool)
+    } deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance NFData FromTemplateRepo where rnf = genericRnf
+instance Binary FromTemplateRepo
+
+fromTemplateRepo :: Name Repo -> FromTemplateRepo
+fromTemplateRepo name = FromTemplateRepo name Nothing Nothing Nothing
+
 data EditRepo = EditRepo
     { editName             :: !(Maybe (Name Repo))
     , editDescription      :: !(Maybe Text)
@@ -244,6 +257,18 @@ instance ToJSON NewRepo where
                   , "allow_merge_commit"  .= allowMergeCommit
                   , "allow_rebase_merge"  .= allowRebaseMerge
                   ]
+
+instance ToJSON FromTemplateRepo where
+    toJSON (FromTemplateRepo { fromTemplateRepoName        = name
+                             , fromTemplateRepoOwner       = owner
+                             , fromTemplateRepoDescription = description
+                             , fromTemplateRepoPrivate     = private
+                             }) = object
+                             [ "name"        .= name
+                             , "owner"       .= owner
+                             , "description" .= description
+                             , "private"     .= private
+                             ]
 
 instance ToJSON EditRepo where
   toJSON (EditRepo { editName             = name
